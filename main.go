@@ -87,7 +87,6 @@ func main() {
 		keyResponse:   keyset,
 	}
 
-	// TODO allow for setting the path in a flag
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) { return })
 	mux.HandleFunc(fmt.Sprintf("POST /%s", *rootURL), srv.handleAuth)
@@ -127,8 +126,18 @@ func main() {
 }
 
 func (s *server) handleAuth(w http.ResponseWriter, r *http.Request) {
-	// TODO: try to parse the body, if we get a map set the custom claims
-	token := jwt.New(s.signingMethod)
+	claims := make(jwt.MapClaims)
+
+	if r.ContentLength > 0 {
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&claims)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error unmarshalling request body to claims: %s\n", err), http.StatusBadRequest)
+			return
+		}
+	}
+
+	token := jwt.NewWithClaims(s.signingMethod, claims)
 	signedString, err := token.SignedString(s.key)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error creating signed string: %s\n", err), http.StatusInternalServerError)
@@ -141,7 +150,7 @@ func (s *server) handleAuth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (s *server) handleWellKnown(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleWellKnown(w http.ResponseWriter, _ *http.Request) {
 	marshalled, err := json.Marshal(s.keyResponse)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error marshalling key response: %s", err), http.StatusInternalServerError)
