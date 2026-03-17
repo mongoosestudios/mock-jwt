@@ -2,10 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ecdsa"
-	"crypto/elliptic"
-	"crypto/rand"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -18,34 +14,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/MongooseStudios/mock-jwt/internal/provider"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 )
 
 type server struct {
-	signingMethod jwt.SigningMethod
-	key           interface{}
-	keyResponse   KeysetResponse
-}
-
-// JSONWebKey is the key format described at https://datatracker.ietf.org/doc/html/rfc7517#section-3
-type JSONWebKey struct {
-	KeyType              string    `json:"kty"`
-	Use                  string    `json:"use"`
-	KeyOps               []string  `json:"key_ops,omitempty"`
-	Algorithm            string    `json:"alg,omitempty"`
-	KeyID                uuid.UUID `json:"kid,omitempty"`
-	X509URL              string    `json:"x5u,omitempty"`
-	X509Chain            []string  `json:"x5c,omitempty"`      // N.B. these should be b64 encoded strings if used
-	X509ThumbprintSHA1   string    `json:"x5t,omitempty"`      // N.B. B64 uRL encoded SHA-1 thumbprint of DER encoding
-	X509ThumbprintSHA256 string    `json:"x5t#S256,omitempty"` // N.B. B64 URL encoded SHA-256 thumbprint of DER encoding
-	Curve                string    `json:"crv,omitempty"`      // N.B. not directly specified in the RFC but present in examples
-	X                    string    `json:"x,omitempty"`        // N.B. B64 URL encoded x coordinate of ECC, not directly specified in the RFC, but present in examples
-	Y                    string    `json:"y,omitempty"`        // N.B. B64 URL encoded y coordinate of ECC, not directly specified in the RFC, but present in examples
-}
-
-type KeysetResponse struct {
-	Keys []JSONWebKey `json:"keys"`
+	auth *provider.MockAuth
 }
 
 func main() {
@@ -57,34 +31,14 @@ func main() {
 
 	flag.Parse()
 
-	// TODO: needs a flag to set the signing method with available options in help
-	// TODO: pull this out into a function that we can call in a switch based on ^
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+	mockProvider, err := provider.NewMockAuth()
 	if err != nil {
-		slog.Error("error generating private key", "err", err)
+		slog.Error("error creating mock auth provider", "err", err)
 		os.Exit(1)
 	}
 
-	keyX := base64.URLEncoding.EncodeToString(privateKey.PublicKey.Params().Gx.Bytes())
-	keyY := base64.URLEncoding.EncodeToString(privateKey.PublicKey.Params().Gy.Bytes())
-
-	keyset := KeysetResponse{Keys: []JSONWebKey{
-		{
-			KeyType:   "EC",
-			Use:       "sig",
-			KeyOps:    []string{"verify"},
-			Algorithm: "ES256",
-			KeyID:     uuid.New(),
-			Curve:     "P-256",
-			X:         keyX,
-			Y:         keyY,
-		},
-	}}
-
 	srv := server{
-		signingMethod: jwt.SigningMethodES256,
-		key:           privateKey,
-		keyResponse:   keyset,
+		auth: mockProvider,
 	}
 
 	mux := http.NewServeMux()
@@ -117,7 +71,7 @@ func main() {
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 
-		err := httpServer.Shutdown(shutdownCtx)
+		err = httpServer.Shutdown(shutdownCtx)
 		if err != nil {
 			slog.Error("error shutting down server", "err", err)
 		}
@@ -128,6 +82,7 @@ func main() {
 func (s *server) handleAuth(w http.ResponseWriter, r *http.Request) {
 	claims := make(jwt.MapClaims)
 
+	// unmarshall the body into a map that will echo the claims provided (if there are any) back through the token claims
 	if r.ContentLength > 0 {
 		decoder := json.NewDecoder(r.Body)
 		err := decoder.Decode(&claims)
@@ -137,21 +92,20 @@ func (s *server) handleAuth(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	token := jwt.NewWithClaims(s.signingMethod, claims)
-	signedString, err := token.SignedString(s.key)
+	newToken, err := s.auth.MakeSignedToken(claims)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error creating signed string: %s\n", err), http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("error generating token: %s\n", err), http.StatusInternalServerError)
 		return
 	}
 
-	_, err = w.Write([]byte(signedString))
+	_, err = w.Write([]byte(newToken))
 	if err != nil {
 		slog.Error("error writing response", "err", err)
 	}
 }
 
 func (s *server) handleWellKnown(w http.ResponseWriter, _ *http.Request) {
-	marshalled, err := json.Marshal(s.keyResponse)
+	marshalled, err := json.Marshal(s.auth.GetKey())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error marshalling key response: %s", err), http.StatusInternalServerError)
 		return
