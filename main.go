@@ -8,6 +8,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -48,6 +49,11 @@ type KeysetResponse struct {
 }
 
 func main() {
+	var ipFlag = flag.String("ip", "", "the IP interfaces to bind to, default is all interfaces on the port specified (IE: \":8080\")")
+	var portFlag = flag.Int("port", 8080, "the port to listen on")
+
+	flag.Parse()
+
 	// TODO: needs a flag to set the signing method with available options in help
 	// TODO: pull this out into a function that we can call in a switch based on ^
 	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
@@ -83,13 +89,11 @@ func main() {
 	mux.HandleFunc("POST /auth", srv.handleAuth)
 	mux.HandleFunc("GET /auth/.well-known/jwks.json", srv.handleWellKnown)
 
-	// TODO: use a flag to set the port and optionally IP
 	httpServer := http.Server{
-		Addr:    fmt.Sprintf(":8888"),
+		Addr:    fmt.Sprintf("%s:%d", *ipFlag, *portFlag),
 		Handler: mux,
 	}
 
-	// TODO: flag for TLS
 	go func() {
 		slog.Info("Server starting, listening on", "ip", "all", "port", "8888")
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
