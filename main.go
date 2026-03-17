@@ -51,6 +51,9 @@ type KeysetResponse struct {
 func main() {
 	var ipFlag = flag.String("ip", "", "the IP interfaces to bind to, default is all interfaces on the port specified (IE: \":8080\")")
 	var portFlag = flag.Int("port", 8080, "the port to listen on")
+	var rootURL = flag.String("root", "auth", "the root URL to serve tokens on")
+	var JWKSURL = flag.String("jwks-url", ".well-known", "the URL that the JWKS data will be served at")
+	var JWKSName = flag.String("jwks-name", "jwks.json", "name and extension that the JWKS data will be served at")
 
 	flag.Parse()
 
@@ -86,8 +89,9 @@ func main() {
 
 	// TODO allow for setting the path in a flag
 	mux := http.NewServeMux()
-	mux.HandleFunc("POST /auth", srv.handleAuth)
-	mux.HandleFunc("GET /auth/.well-known/jwks.json", srv.handleWellKnown)
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) { return })
+	mux.HandleFunc(fmt.Sprintf("POST /%s", *rootURL), srv.handleAuth)
+	mux.HandleFunc(fmt.Sprintf("GET /%s/%s/%s", *rootURL, *JWKSURL, *JWKSName), srv.handleWellKnown)
 
 	httpServer := http.Server{
 		Addr:    fmt.Sprintf("%s:%d", *ipFlag, *portFlag),
