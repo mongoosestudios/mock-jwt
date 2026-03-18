@@ -391,7 +391,7 @@ func TestSetCustomClaims(t *testing.T) {
 				customClaims["Bar"], customBar)
 		}
 	} else {
-		t.Errorf("custom claim Foo not passed through signed token correctly, not present in map")
+		t.Errorf("custom claim Bar not passed through signed token correctly, not present in map")
 	}
 
 	if claimA, ok := (*tokenClaims)["claimA"]; ok {
@@ -409,6 +409,83 @@ func TestSetCustomClaims(t *testing.T) {
 		}
 	} else {
 		t.Errorf("test claim B not passed through signed token correctly, not present in map")
+	}
+}
+
+func TestSetCustomClaimsNewClaimOverrides(t *testing.T) {
+	signingMethod := "ES256"
+	expectedUse := "testing"
+	expectedOps := []string{"testing, foo"}
+
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
+	if err != nil {
+		t.Fatalf("error creating test mock auth provider: %s\n", err)
+	}
+
+	customClaims := map[string]any{
+		"Foo": "bar",
+		"Bar": "baz",
+	}
+
+	testAuth.SetCustomClaims(customClaims)
+
+	testClaims := map[string]any{
+		"claimA": "A",
+		"Bar":    "Foo",
+	}
+
+	token, err := testAuth.MakeSignedToken(testClaims)
+	if err != nil {
+		t.Fatalf("error creating token: %s", err)
+	}
+
+	expectedMap := map[string]any{
+		"Foo":    "",
+		"Bar":    "",
+		"claimA": "",
+	}
+	var expectedClaims jwt.MapClaims
+	expectedClaims = expectedMap
+
+	testParser := createParser([]string{jwt.SigningMethodES256.Alg()})
+	parsedToken, err := testParser.ParseWithClaims(token, &expectedClaims, func(token *jwt.Token) (any, error) {
+		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
+	})
+	if err != nil {
+		t.Fatalf("error validating token: %s\n", err)
+	}
+
+	if !parsedToken.Valid {
+		t.Error("unable to validate parsed token using the public key")
+	}
+
+	tokenClaims := parsedToken.Claims.(*jwt.MapClaims)
+
+	if customFoo, ok := (*tokenClaims)["Foo"]; ok {
+		if customFoo != customClaims["Foo"] {
+			t.Errorf("custom claim Foo not passed through signed token correctly, wanted: %s, got: %s",
+				customClaims["Foo"], customFoo)
+		}
+	} else {
+		t.Errorf("custom claim Foo not passed through signed token correctly, not present in map")
+	}
+
+	if testBar, ok := (*tokenClaims)["Bar"]; ok {
+		if testBar != testClaims["Bar"] {
+			t.Errorf("custom claim Bar did not override custom claim token correctly, wanted: %s, got: %s",
+				testClaims["Bar"], testBar)
+		}
+	} else {
+		t.Errorf("test claim Bar not passed through signed token correctly, not present in map")
+	}
+
+	if claimA, ok := (*tokenClaims)["claimA"]; ok {
+		if claimA != testClaims["claimA"] {
+			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimA"], claimA)
+		}
+	} else {
+		t.Errorf("test claim A not passed through signed token correctly, not present in map")
 	}
 }
 
