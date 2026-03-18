@@ -9,13 +9,14 @@ import (
 )
 
 func TestNewAuthES256(t *testing.T) {
-	keyType := "ES256"
+	signingMethod := "ES256"
+	expectedKeyType := "EC"
 	expectedCurve := "P-256"
 	expectedMethod := jwt.SigningMethodES256
 	expectedUse := "testing"
 	expectedOps := []string{"testing, foo"}
 
-	testAuth, err := NewMockAuth(keyType, expectedUse, expectedOps)
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
 	if err != nil {
 		t.Fatalf("error creating test mock auth provider: %s\n", err)
 	}
@@ -36,8 +37,8 @@ func TestNewAuthES256(t *testing.T) {
 	}
 	key := testAuth.KeyResponse.Keys[0]
 
-	if key.Algorithm != keyType {
-		t.Errorf("bad key type returned, wanted: %q, got: %q", keyType, key.Algorithm)
+	if key.Algorithm != signingMethod {
+		t.Errorf("bad key type returned, wanted: %q, got: %q", signingMethod, key.Algorithm)
 	}
 	if key.Use != expectedUse {
 		t.Errorf("bad use returned, wanted: %q, got: %q", expectedUse, key.Use)
@@ -51,6 +52,10 @@ func TestNewAuthES256(t *testing.T) {
 	}
 	if len(key.Y) < 1 {
 		t.Errorf("bad key Y field, should have a length but got: %q", key.X)
+	}
+
+	if key.KeyType != expectedKeyType {
+		t.Errorf("bad key type set, wanted: %q, got: %q", expectedKeyType, key.KeyType)
 	}
 
 	if testAuth.SigningMethod != expectedMethod {
@@ -59,13 +64,14 @@ func TestNewAuthES256(t *testing.T) {
 }
 
 func TestNewAuthES384(t *testing.T) {
-	keyType := "ES384"
+	signingMethod := "ES384"
+	expectedKeyType := "EC"
 	expectedCurve := "P-384"
 	expectedMethod := jwt.SigningMethodES384
 	expectedUse := "testing"
 	expectedOps := []string{"testing, foo"}
 
-	testAuth, err := NewMockAuth(keyType, expectedUse, expectedOps)
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
 	if err != nil {
 		t.Fatalf("error creating test mock auth provider: %s\n", err)
 	}
@@ -86,8 +92,8 @@ func TestNewAuthES384(t *testing.T) {
 	}
 	key := testAuth.KeyResponse.Keys[0]
 
-	if key.Algorithm != keyType {
-		t.Errorf("bad key type returned, wanted: %q, got: %q", keyType, key.Algorithm)
+	if key.Algorithm != signingMethod {
+		t.Errorf("bad key type returned, wanted: %q, got: %q", signingMethod, key.Algorithm)
 	}
 	if key.Use != expectedUse {
 		t.Errorf("bad use returned, wanted: %q, got: %q", expectedUse, key.Use)
@@ -101,6 +107,10 @@ func TestNewAuthES384(t *testing.T) {
 	}
 	if len(key.Y) < 1 {
 		t.Errorf("bad key Y field, should have a length but got: %q", key.X)
+	}
+
+	if key.KeyType != expectedKeyType {
+		t.Errorf("bad key type set, wanted: %q, got: %q", expectedKeyType, key.KeyType)
 	}
 
 	if testAuth.SigningMethod != expectedMethod {
@@ -109,13 +119,14 @@ func TestNewAuthES384(t *testing.T) {
 }
 
 func TestNewAuthES512(t *testing.T) {
-	keyType := "ES512"
+	signingMethod := "ES512"
+	expectedKeyType := "EC"
 	expectedCurve := "P-521"
 	expectedMethod := jwt.SigningMethodES512
 	expectedUse := "testing"
 	expectedOps := []string{"testing, foo"}
 
-	testAuth, err := NewMockAuth(keyType, expectedUse, expectedOps)
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
 	if err != nil {
 		t.Fatalf("error creating test mock auth provider: %s\n", err)
 	}
@@ -136,8 +147,8 @@ func TestNewAuthES512(t *testing.T) {
 	}
 	key := testAuth.KeyResponse.Keys[0]
 
-	if key.Algorithm != keyType {
-		t.Errorf("bad key type returned, wanted: %q, got: %q", keyType, key.Algorithm)
+	if key.Algorithm != signingMethod {
+		t.Errorf("bad key type returned, wanted: %q, got: %q", signingMethod, key.Algorithm)
 	}
 	if key.Use != expectedUse {
 		t.Errorf("bad use returned, wanted: %q, got: %q", expectedUse, key.Use)
@@ -151,6 +162,10 @@ func TestNewAuthES512(t *testing.T) {
 	}
 	if len(key.Y) < 1 {
 		t.Errorf("bad key Y field, should have a length but got: %q", key.X)
+	}
+
+	if key.KeyType != expectedKeyType {
+		t.Errorf("bad key type set, wanted: %q, got: %q", expectedKeyType, key.KeyType)
 	}
 
 	if testAuth.SigningMethod != expectedMethod {

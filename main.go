@@ -24,14 +24,14 @@ type server struct {
 }
 
 func main() {
-	var ipFlag = flag.String("ip", "", "the IP interfaces to bind to, default is all interfaces on the port specified (IE: \":8080\")")
-	var portFlag = flag.Int("port", 8080, "the port to listen on")
-	var rootURLFlag = flag.String("root", "auth", "the root URL to serve tokens on")
-	var JWKSURLFlag = flag.String("jwks-url", ".well-known", "the URL that the JWKS data will be served at")
-	var JWKSNameFlag = flag.String("jwks-name", "jwks.json", "name and extension that the JWKS data will be served at")
-	var signingMethodFlag = flag.String("signing-method", "ES256", "signature method used in the tokens generated, see documentation for more information")
-	var keyUseFlag = flag.String("key-use", "sig", "value to be used for the \"use\" field")
-	var keyOpsFlag = flag.String("key-ops", "verify", "value to be used for the \"key_ops\" field, to specify multiple options wrap the comma separated list in quotes")
+	ipFlag := flag.String("ip", "", "the IP interfaces to bind to, default is all interfaces on the port specified (IE: \":8080\")")
+	portFlag := flag.Int("port", 8080, "the port to listen on")
+	rootURLFlag := flag.String("root", "auth", "the root URL to serve tokens on")
+	JWKSURLFlag := flag.String("jwks-url", ".well-known", "the URL that the JWKS data will be served at")
+	JWKSNameFlag := flag.String("jwks-name", "jwks.json", "name and extension that the JWKS data will be served at")
+	signingMethodFlag := flag.String("signing-method", "ES256", "signature method used in the tokens generated, see documentation for more information")
+	keyUseFlag := flag.String("key-use", "sig", "value to be used for the \"use\" field")
+	keyOpsFlag := flag.String("key-ops", "verify", "value to be used for the \"key_ops\" field, to specify multiple options wrap the comma separated list in quotes")
 
 	flag.Parse()
 
@@ -48,7 +48,8 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) { return })
+	// in case you need to wait in a pipeline, poll the ready endpoint for a 200 response
+	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {})
 	mux.HandleFunc(fmt.Sprintf("POST /%s", *rootURLFlag), srv.handleAuth)
 	mux.HandleFunc(fmt.Sprintf("GET /%s/%s/%s", *rootURLFlag, *JWKSURLFlag, *JWKSNameFlag), srv.handleWellKnown)
 
@@ -65,10 +66,7 @@ func main() {
 	}()
 
 	var wg sync.WaitGroup
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
+	wg.Go(func() {
 		sigChan := make(chan os.Signal, 1)
 		signal.Notify(sigChan, syscall.SIGTERM, syscall.SIGINT)
 
@@ -81,7 +79,7 @@ func main() {
 		if err != nil {
 			slog.Error("error shutting down server", "err", err)
 		}
-	}()
+	})
 	wg.Wait()
 }
 
@@ -121,13 +119,11 @@ func (s *server) handleWellKnown(w http.ResponseWriter, _ *http.Request) {
 	if err != nil {
 		slog.Error("error writing well known response body", "err", err)
 	}
-
-	return
 }
 
 func parseKeyOps(input string) []string {
 	splitList := strings.Split(input, ",")
-	var output = make([]string, 0)
+	output := make([]string, 0)
 	for _, item := range splitList {
 		trimmed := strings.TrimSpace(item)
 		if len(trimmed) > 0 {

@@ -14,7 +14,7 @@ import (
 
 type MockAuth struct {
 	SigningMethod jwt.SigningMethod
-	Key           interface{}
+	Key           any
 	KeyResponse   KeysetResponse
 }
 
@@ -40,6 +40,8 @@ type KeysetResponse struct {
 	Keys []JSONWebKey `json:"keys"`
 }
 
+// TODO: better example for this for the GODOC
+// NewMockAuth creates a new instance of a mock authenticator.
 func NewMockAuth(signMethod string, keyUse string, keyOps []string) (*MockAuth, error) {
 	thisMethod, privateKey, webKey, err := generateNewPrivateKey(signMethod)
 	if err != nil {
@@ -75,8 +77,8 @@ func (ma *MockAuth) GetKey() KeysetResponse {
 	return ma.KeyResponse
 }
 
-func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, interface{}, JSONWebKey, error) {
-	var privateKey interface{}
+func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWebKey, error) {
+	var privateKey any
 	newJWK := JSONWebKey{
 		KeyID: uuid.New(),
 	}
@@ -98,7 +100,6 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, interface{}
 		newJWK.Curve = k.Params().Name
 		newJWK.X = keyX
 		newJWK.Y = keyY
-
 	case "es384":
 		k, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		if err != nil {
@@ -127,6 +128,7 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, interface{}
 		privateKey = k
 
 		thisMethod = jwt.SigningMethodES512
+		newJWK.KeyType = "EC"
 		newJWK.Algorithm = "ES512"
 		newJWK.Curve = k.Params().Name
 		newJWK.X = keyX
