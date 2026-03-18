@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"maps"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,9 +14,10 @@ import (
 )
 
 type MockAuth struct {
-	SigningMethod jwt.SigningMethod
-	Key           any
-	KeyResponse   KeysetResponse
+	signingMethod jwt.SigningMethod
+	key           any
+	keyResponse   KeysetResponse
+	customClaims  map[string]any
 }
 
 // JSONWebKey is the key format described at https://datatracker.ietf.org/doc/html/rfc7517#section-3
@@ -56,16 +58,31 @@ func NewMockAuth(signMethod string, keyUse string, keyOps []string) (*MockAuth, 
 	}}
 
 	return &MockAuth{
-		SigningMethod: thisMethod,
-		Key:           privateKey,
-		KeyResponse:   keySet,
+		signingMethod: thisMethod,
+		key:           privateKey,
+		keyResponse:   keySet,
 	}, nil
 }
 
+func (ma *MockAuth) SetCustomClaims(claims map[string]any) {
+	ma.customClaims = claims
+}
+
 // MakeSignedToken will take the provided claims and return a signed JWT with those claims
-func (ma *MockAuth) MakeSignedToken(claims jwt.MapClaims) (string, error) {
-	token := jwt.NewWithClaims(ma.SigningMethod, claims)
-	signedString, err := token.SignedString(ma.Key)
+func (ma *MockAuth) MakeSignedToken(claims map[string]any) (string, error) {
+	// first apply custom claims, then apply the claims given here (if any)
+	thisClaims := make(map[string]any)
+	if len(ma.customClaims) > 0 {
+		maps.Copy(thisClaims, ma.customClaims)
+	}
+	if len(claims) > 0 {
+		maps.Copy(thisClaims, claims)
+	}
+	var jwtClaims jwt.MapClaims
+	jwtClaims = thisClaims
+
+	token := jwt.NewWithClaims(ma.signingMethod, jwtClaims)
+	signedString, err := token.SignedString(ma.key)
 	if err != nil {
 		return "", err
 	}
@@ -74,7 +91,7 @@ func (ma *MockAuth) MakeSignedToken(claims jwt.MapClaims) (string, error) {
 
 // GetKey returns a KeysetResponse that may be marshaled and returned to the user
 func (ma *MockAuth) GetKey() KeysetResponse {
-	return ma.KeyResponse
+	return ma.keyResponse
 }
 
 func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWebKey, error) {

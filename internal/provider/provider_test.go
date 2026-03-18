@@ -21,7 +21,7 @@ func TestNewAuthES256(t *testing.T) {
 		t.Fatalf("error creating test mock auth provider: %s\n", err)
 	}
 
-	if key, ok := testAuth.Key.(*ecdsa.PrivateKey); ok {
+	if key, ok := testAuth.key.(*ecdsa.PrivateKey); ok {
 		if key.Params().Name != expectedCurve {
 			t.Errorf("bad curve name, wanted: %q, got: %q", expectedCurve, key.Params().Name)
 		}
@@ -29,13 +29,13 @@ func TestNewAuthES256(t *testing.T) {
 		t.Errorf("bad key type, got: '%T', wanted: '%T'", key, &ecdsa.PrivateKey{})
 	}
 
-	if len(testAuth.KeyResponse.Keys) != 1 {
-		t.Errorf("bad key response list length, should be 1 but got %d", len(testAuth.KeyResponse.Keys))
-		if len(testAuth.KeyResponse.Keys) < 1 {
+	if len(testAuth.keyResponse.Keys) != 1 {
+		t.Errorf("bad key response list length, should be 1 but got %d", len(testAuth.keyResponse.Keys))
+		if len(testAuth.keyResponse.Keys) < 1 {
 			t.Fatalf("no keys in key list")
 		}
 	}
-	key := testAuth.KeyResponse.Keys[0]
+	key := testAuth.keyResponse.Keys[0]
 
 	if key.Algorithm != signingMethod {
 		t.Errorf("bad key type returned, wanted: %q, got: %q", signingMethod, key.Algorithm)
@@ -58,8 +58,8 @@ func TestNewAuthES256(t *testing.T) {
 		t.Errorf("bad key type set, wanted: %q, got: %q", expectedKeyType, key.KeyType)
 	}
 
-	if testAuth.SigningMethod != expectedMethod {
-		t.Errorf("bad signing method found, wanted: %q, got: %q", expectedMethod.Name, testAuth.SigningMethod)
+	if testAuth.signingMethod != expectedMethod {
+		t.Errorf("bad signing method found, wanted: %q, got: %q", expectedMethod.Name, testAuth.signingMethod)
 	}
 }
 
@@ -76,7 +76,7 @@ func TestNewAuthES384(t *testing.T) {
 		t.Fatalf("error creating test mock auth provider: %s\n", err)
 	}
 
-	if key, ok := testAuth.Key.(*ecdsa.PrivateKey); ok {
+	if key, ok := testAuth.key.(*ecdsa.PrivateKey); ok {
 		if key.Params().Name != expectedCurve {
 			t.Errorf("bad curve name, wanted: %q, got: %q", expectedCurve, key.Params().Name)
 		}
@@ -84,13 +84,13 @@ func TestNewAuthES384(t *testing.T) {
 		t.Errorf("bad key type, got: '%T', wanted: '%T'", key, &ecdsa.PrivateKey{})
 	}
 
-	if len(testAuth.KeyResponse.Keys) != 1 {
-		t.Errorf("bad key response list length, should be 1 but got %d", len(testAuth.KeyResponse.Keys))
-		if len(testAuth.KeyResponse.Keys) < 1 {
+	if len(testAuth.keyResponse.Keys) != 1 {
+		t.Errorf("bad key response list length, should be 1 but got %d", len(testAuth.keyResponse.Keys))
+		if len(testAuth.keyResponse.Keys) < 1 {
 			t.Fatalf("no keys in key list")
 		}
 	}
-	key := testAuth.KeyResponse.Keys[0]
+	key := testAuth.keyResponse.Keys[0]
 
 	if key.Algorithm != signingMethod {
 		t.Errorf("bad key type returned, wanted: %q, got: %q", signingMethod, key.Algorithm)
@@ -113,8 +113,8 @@ func TestNewAuthES384(t *testing.T) {
 		t.Errorf("bad key type set, wanted: %q, got: %q", expectedKeyType, key.KeyType)
 	}
 
-	if testAuth.SigningMethod != expectedMethod {
-		t.Errorf("bad signing method found, wanted: %q, got: %q", expectedMethod.Name, testAuth.SigningMethod)
+	if testAuth.signingMethod != expectedMethod {
+		t.Errorf("bad signing method found, wanted: %q, got: %q", expectedMethod.Name, testAuth.signingMethod)
 	}
 }
 
@@ -131,7 +131,7 @@ func TestNewAuthES512(t *testing.T) {
 		t.Fatalf("error creating test mock auth provider: %s\n", err)
 	}
 
-	if key, ok := testAuth.Key.(*ecdsa.PrivateKey); ok {
+	if key, ok := testAuth.key.(*ecdsa.PrivateKey); ok {
 		if key.Params().Name != expectedCurve {
 			t.Errorf("bad curve name, wanted: %q, got: %q", expectedCurve, key.Params().Name)
 		}
@@ -139,13 +139,13 @@ func TestNewAuthES512(t *testing.T) {
 		t.Errorf("bad key type, got: '%T', wanted: '%T'", key, &ecdsa.PrivateKey{})
 	}
 
-	if len(testAuth.KeyResponse.Keys) != 1 {
-		t.Errorf("bad key response list length, should be 1 but got %d", len(testAuth.KeyResponse.Keys))
-		if len(testAuth.KeyResponse.Keys) < 1 {
+	if len(testAuth.keyResponse.Keys) != 1 {
+		t.Errorf("bad key response list length, should be 1 but got %d", len(testAuth.keyResponse.Keys))
+		if len(testAuth.keyResponse.Keys) < 1 {
 			t.Fatalf("no keys in key list")
 		}
 	}
-	key := testAuth.KeyResponse.Keys[0]
+	key := testAuth.keyResponse.Keys[0]
 
 	if key.Algorithm != signingMethod {
 		t.Errorf("bad key type returned, wanted: %q, got: %q", signingMethod, key.Algorithm)
@@ -168,8 +168,8 @@ func TestNewAuthES512(t *testing.T) {
 		t.Errorf("bad key type set, wanted: %q, got: %q", expectedKeyType, key.KeyType)
 	}
 
-	if testAuth.SigningMethod != expectedMethod {
-		t.Errorf("bad signing method found, wanted: %q, got: %q", expectedMethod.Name, testAuth.SigningMethod)
+	if testAuth.signingMethod != expectedMethod {
+		t.Errorf("bad signing method found, wanted: %q, got: %q", expectedMethod.Name, testAuth.signingMethod)
 	}
 }
 
@@ -195,7 +195,7 @@ func TestTokenES256(t *testing.T) {
 
 	testParser := createParser([]string{jwt.SigningMethodES256.Alg()})
 	parsedToken, err := testParser.ParseWithClaims(token, &testClaims, func(token *jwt.Token) (any, error) {
-		return &testAuth.Key.(*ecdsa.PrivateKey).PublicKey, nil
+		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
 	})
 	if err != nil {
 		t.Fatalf("error validating token: %s\n", err)
@@ -246,7 +246,7 @@ func TestTokenES384(t *testing.T) {
 
 	testParser := createParser([]string{jwt.SigningMethodES384.Alg()})
 	parsedToken, err := testParser.ParseWithClaims(token, &testClaims, func(token *jwt.Token) (any, error) {
-		return &testAuth.Key.(*ecdsa.PrivateKey).PublicKey, nil
+		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
 	})
 	if err != nil {
 		t.Fatalf("error validating token: %s\n", err)
@@ -297,7 +297,7 @@ func TestTokenES512(t *testing.T) {
 
 	testParser := createParser([]string{jwt.SigningMethodES512.Alg()})
 	parsedToken, err := testParser.ParseWithClaims(token, &testClaims, func(token *jwt.Token) (any, error) {
-		return &testAuth.Key.(*ecdsa.PrivateKey).PublicKey, nil
+		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
 	})
 	if err != nil {
 		t.Fatalf("error validating token: %s\n", err)
@@ -308,6 +308,92 @@ func TestTokenES512(t *testing.T) {
 	}
 
 	tokenClaims := parsedToken.Claims.(*jwt.MapClaims)
+	if claimA, ok := (*tokenClaims)["claimA"]; ok {
+		if claimA != testClaims["claimA"] {
+			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimA"], claimA)
+		}
+	} else {
+		t.Errorf("test claim A not passed through signed token correctly, not present in map")
+	}
+	if claimB, ok := (*tokenClaims)["claimB"]; ok {
+		if claimB != testClaims["claimB"] {
+			t.Errorf("test claim B not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimB"], claimB)
+		}
+	} else {
+		t.Errorf("test claim B not passed through signed token correctly, not present in map")
+	}
+}
+
+func TestSetCustomClaims(t *testing.T) {
+	signingMethod := "ES256"
+	expectedUse := "testing"
+	expectedOps := []string{"testing, foo"}
+
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
+	if err != nil {
+		t.Fatalf("error creating test mock auth provider: %s\n", err)
+	}
+
+	customClaims := map[string]any{
+		"Foo": "bar",
+		"Bar": "baz",
+	}
+
+	testAuth.SetCustomClaims(customClaims)
+
+	testClaims := map[string]any{
+		"claimA": "A",
+		"claimB": "B",
+	}
+
+	token, err := testAuth.MakeSignedToken(testClaims)
+	if err != nil {
+		t.Fatalf("error creating token: %s", err)
+	}
+
+	expectedMap := map[string]any{
+		"Foo":    "",
+		"Bar":    "",
+		"claimA": "",
+		"claimB": "",
+	}
+	var expectedClaims jwt.MapClaims
+	expectedClaims = expectedMap
+
+	testParser := createParser([]string{jwt.SigningMethodES256.Alg()})
+	parsedToken, err := testParser.ParseWithClaims(token, &expectedClaims, func(token *jwt.Token) (any, error) {
+		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
+	})
+	if err != nil {
+		t.Fatalf("error validating token: %s\n", err)
+	}
+
+	if !parsedToken.Valid {
+		t.Error("unable to validate parsed token using the public key")
+	}
+
+	tokenClaims := parsedToken.Claims.(*jwt.MapClaims)
+
+	if customFoo, ok := (*tokenClaims)["Foo"]; ok {
+		if customFoo != customClaims["Foo"] {
+			t.Errorf("custom claim Foo not passed through signed token correctly, wanted: %s, got: %s",
+				customClaims["Foo"], customFoo)
+		}
+	} else {
+		t.Errorf("custom claim Foo not passed through signed token correctly, not present in map")
+	}
+
+	if customBar, ok := (*tokenClaims)["Bar"]; ok {
+		if customBar != customClaims["Bar"] {
+			t.Errorf("custom claim Bar not passed through signed token correctly, wanted: %s, got: %s",
+				customClaims["Bar"], customBar)
+		}
+	} else {
+		t.Errorf("custom claim Foo not passed through signed token correctly, not present in map")
+	}
+
 	if claimA, ok := (*tokenClaims)["claimA"]; ok {
 		if claimA != testClaims["claimA"] {
 			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
