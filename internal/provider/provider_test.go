@@ -193,8 +193,15 @@ func TestTokenES256(t *testing.T) {
 		t.Fatalf("error creating token: %s", err)
 	}
 
+	claimMap := map[string]any{
+		"claimA": "",
+		"claimB": "",
+	}
+	var claimTemplate jwt.MapClaims
+	claimTemplate = claimMap
+
 	testParser := createParser([]string{jwt.SigningMethodES256.Alg()})
-	parsedToken, err := testParser.ParseWithClaims(token, &testClaims, func(token *jwt.Token) (any, error) {
+	parsedToken, err := testParser.ParseWithClaims(token, claimTemplate, func(token *jwt.Token) (any, error) {
 		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
 	})
 	if err != nil {
@@ -205,8 +212,8 @@ func TestTokenES256(t *testing.T) {
 		t.Error("unable to validate parsed token using the public key")
 	}
 
-	tokenClaims := parsedToken.Claims.(*jwt.MapClaims)
-	if claimA, ok := (*tokenClaims)["claimA"]; ok {
+	tokenClaims := parsedToken.Claims.(jwt.MapClaims)
+	if claimA, ok := (tokenClaims)["claimA"]; ok {
 		if claimA != testClaims["claimA"] {
 			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
 				testClaims["claimA"], claimA)
@@ -214,7 +221,7 @@ func TestTokenES256(t *testing.T) {
 	} else {
 		t.Errorf("test claim A not passed through signed token correctly, not present in map")
 	}
-	if claimB, ok := (*tokenClaims)["claimB"]; ok {
+	if claimB, ok := (tokenClaims)["claimB"]; ok {
 		if claimB != testClaims["claimB"] {
 			t.Errorf("test claim B not passed through signed token correctly, wanted: %s, got: %s",
 				testClaims["claimB"], claimB)
@@ -244,8 +251,15 @@ func TestTokenES384(t *testing.T) {
 		t.Fatalf("error creating token: %s", err)
 	}
 
+	claimMap := map[string]any{
+		"claimA": "",
+		"claimB": "",
+	}
+	var claimTemplate jwt.MapClaims
+	claimTemplate = claimMap
+
 	testParser := createParser([]string{jwt.SigningMethodES384.Alg()})
-	parsedToken, err := testParser.ParseWithClaims(token, &testClaims, func(token *jwt.Token) (any, error) {
+	parsedToken, err := testParser.ParseWithClaims(token, claimTemplate, func(token *jwt.Token) (any, error) {
 		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
 	})
 	if err != nil {
@@ -256,8 +270,8 @@ func TestTokenES384(t *testing.T) {
 		t.Error("unable to validate parsed token using the public key")
 	}
 
-	tokenClaims := parsedToken.Claims.(*jwt.MapClaims)
-	if claimA, ok := (*tokenClaims)["claimA"]; ok {
+	tokenClaims := parsedToken.Claims.(jwt.MapClaims)
+	if claimA, ok := (tokenClaims)["claimA"]; ok {
 		if claimA != testClaims["claimA"] {
 			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
 				testClaims["claimA"], claimA)
@@ -265,7 +279,7 @@ func TestTokenES384(t *testing.T) {
 	} else {
 		t.Errorf("test claim A not passed through signed token correctly, not present in map")
 	}
-	if claimB, ok := (*tokenClaims)["claimB"]; ok {
+	if claimB, ok := (tokenClaims)["claimB"]; ok {
 		if claimB != testClaims["claimB"] {
 			t.Errorf("test claim B not passed through signed token correctly, wanted: %s, got: %s",
 				testClaims["claimB"], claimB)
@@ -290,13 +304,20 @@ func TestTokenES512(t *testing.T) {
 		"claimB": "B",
 	}
 
+	claimMap := map[string]any{
+		"claimA": "",
+		"claimB": "",
+	}
+	var claimTemplate jwt.MapClaims
+	claimTemplate = claimMap
+
 	token, err := testAuth.MakeSignedToken(testClaims)
 	if err != nil {
 		t.Fatalf("error creating token: %s", err)
 	}
 
 	testParser := createParser([]string{jwt.SigningMethodES512.Alg()})
-	parsedToken, err := testParser.ParseWithClaims(token, &testClaims, func(token *jwt.Token) (any, error) {
+	parsedToken, err := testParser.ParseWithClaims(token, claimTemplate, func(token *jwt.Token) (any, error) {
 		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
 	})
 	if err != nil {
@@ -307,8 +328,8 @@ func TestTokenES512(t *testing.T) {
 		t.Error("unable to validate parsed token using the public key")
 	}
 
-	tokenClaims := parsedToken.Claims.(*jwt.MapClaims)
-	if claimA, ok := (*tokenClaims)["claimA"]; ok {
+	tokenClaims := parsedToken.Claims.(jwt.MapClaims)
+	if claimA, ok := (tokenClaims)["claimA"]; ok {
 		if claimA != testClaims["claimA"] {
 			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
 				testClaims["claimA"], claimA)
@@ -316,7 +337,7 @@ func TestTokenES512(t *testing.T) {
 	} else {
 		t.Errorf("test claim A not passed through signed token correctly, not present in map")
 	}
-	if claimB, ok := (*tokenClaims)["claimB"]; ok {
+	if claimB, ok := (tokenClaims)["claimB"]; ok {
 		if claimB != testClaims["claimB"] {
 			t.Errorf("test claim B not passed through signed token correctly, wanted: %s, got: %s",
 				testClaims["claimB"], claimB)

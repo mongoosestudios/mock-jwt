@@ -5,6 +5,7 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/base64"
+	"errors"
 	"fmt"
 	"maps"
 	"strings"
@@ -89,9 +90,20 @@ func (ma *MockAuth) MakeSignedToken(claims map[string]any) (string, error) {
 	return signedString, nil
 }
 
-// GetKey returns a KeysetResponse that may be marshaled and returned to the user
-func (ma *MockAuth) GetKey() KeysetResponse {
+// GetKeyResponse returns a KeysetResponse that may be marshaled and returned to the user
+func (ma *MockAuth) GetKeyResponse() KeysetResponse {
 	return ma.keyResponse
+}
+
+// GetPublicKey is a convenience helper to return the public key directly for tests and any future operations
+// that may require knowledge of the public key.
+func (ma *MockAuth) GetPublicKey() (any, error) {
+	switch k := ma.key.(type) {
+	case *ecdsa.PrivateKey:
+		return new(k.PublicKey), nil
+	default:
+		return nil, errors.New("auth provider mock does not have a valid private key type, unable to get public key")
+	}
 }
 
 func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWebKey, error) {
