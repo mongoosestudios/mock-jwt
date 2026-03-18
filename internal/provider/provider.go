@@ -5,8 +5,9 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/base64"
-	"log/slog"
-	"os"
+	"errors"
+	"fmt"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -38,35 +39,23 @@ type KeysetResponse struct {
 	Keys []JSONWebKey `json:"keys"`
 }
 
-func NewMockAuth() (*MockAuth, error) {
-	// TODO: needs a flag to set the signing method with available options in help
-	// TODO: pull this out into a function that we can call in a switch based on ^
-	privateKey, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+func NewMockAuth(signMethod string, keyUse string, keyOps []string) (*MockAuth, error) {
+	privateKey, webKey, err := generateNewPrivateKey(signMethod)
 	if err != nil {
-		slog.Error("error generating private key", "err", err)
-		os.Exit(1)
+		return nil, fmt.Errorf("error generating new private key: %s", err)
 	}
 
-	keyX := base64.URLEncoding.EncodeToString(privateKey.PublicKey.Params().Gx.Bytes())
-	keyY := base64.URLEncoding.EncodeToString(privateKey.PublicKey.Params().Gy.Bytes())
+	webKey.Use = keyUse
+	webKey.KeyOps = keyOps
 
-	keyset := KeysetResponse{Keys: []JSONWebKey{
-		{
-			KeyType:   "EC",
-			Use:       "sig",
-			KeyOps:    []string{"verify"},
-			Algorithm: "ES256",
-			KeyID:     uuid.New(),
-			Curve:     "P-256",
-			X:         keyX,
-			Y:         keyY,
-		},
+	keySet := KeysetResponse{Keys: []JSONWebKey{
+		webKey,
 	}}
 
 	return &MockAuth{
 		SigningMethod: jwt.SigningMethodES256,
 		Key:           privateKey,
-		KeyResponse:   keyset,
+		KeyResponse:   keySet,
 	}, nil
 }
 
@@ -81,4 +70,62 @@ func (ma *MockAuth) MakeSignedToken(claims jwt.MapClaims) (string, error) {
 
 func (ma *MockAuth) GetKey() KeysetResponse {
 	return ma.KeyResponse
+}
+
+func generateNewPrivateKey(signingMethod string) (interface{}, JSONWebKey, error) {
+	var privateKey interface{}
+	newJWK := JSONWebKey{
+		KeyID: uuid.New(),
+	}
+	switch strings.ToLower(signingMethod) {
+	case "es256":
+		k, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
+		if err != nil {
+			return nil, newJWK, fmt.Errorf("error generating private key: %s", err)
+		}
+		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
+		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
+
+		privateKey = k
+
+		newJWK.Algorithm = "ES256"
+		newJWK.Curve = "P-256"
+		newJWK.X = keyX
+		newJWK.Y = keyY
+
+	case "es384":
+		k, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
+		if err != nil {
+			return nil, newJWK, fmt.Errorf("error generating private key: %s", err)
+		}
+		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
+		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
+
+		privateKey = k
+
+		newJWK.Algorithm = "ES384"
+		newJWK.Curve = "P-384"
+		newJWK.X = keyX
+		newJWK.Y = keyY
+	case "es512":
+		// this is confusing because 521/512 but accurate to the RFC as far as I can tell
+		// https://datatracker.ietf.org/doc/html/rfc7518#section-3.1
+		k, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
+		if err != nil {
+			return nil, newJWK, fmt.Errorf("error generating private key: %s", err)
+		}
+		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
+		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
+
+		privateKey = k
+
+		newJWK.Algorithm = "ES512"
+		newJWK.Curve = "P-521"
+		newJWK.X = keyX
+		newJWK.Y = keyY
+	default:
+		return nil, newJWK, fmt.Errorf("unsupported signing method: %s", signingMethod)
+	}
+
+	return privateKey, newJWK, errors.New("not implemented")
 }

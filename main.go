@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -25,13 +26,18 @@ type server struct {
 func main() {
 	var ipFlag = flag.String("ip", "", "the IP interfaces to bind to, default is all interfaces on the port specified (IE: \":8080\")")
 	var portFlag = flag.Int("port", 8080, "the port to listen on")
-	var rootURL = flag.String("root", "auth", "the root URL to serve tokens on")
-	var JWKSURL = flag.String("jwks-url", ".well-known", "the URL that the JWKS data will be served at")
-	var JWKSName = flag.String("jwks-name", "jwks.json", "name and extension that the JWKS data will be served at")
+	var rootURLFlag = flag.String("root", "auth", "the root URL to serve tokens on")
+	var JWKSURLFlag = flag.String("jwks-url", ".well-known", "the URL that the JWKS data will be served at")
+	var JWKSNameFlag = flag.String("jwks-name", "jwks.json", "name and extension that the JWKS data will be served at")
+	var signingMethodFlag = flag.String("signing-method", "ES256", "signature method used in the tokens generated, see documentation for more information")
+	var keyUseFlag = flag.String("key-use", "sig", "value to be used for the \"use\" field")
+	var keyOpsFlag = flag.String("key-ops", "verify", "value to be used for the \"key_ops\" field, to specify multiple options wrap the comma separated list in quotes")
 
 	flag.Parse()
 
-	mockProvider, err := provider.NewMockAuth()
+	opsList := parseKeyOps(*keyOpsFlag)
+
+	mockProvider, err := provider.NewMockAuth(*signingMethodFlag, *keyUseFlag, opsList)
 	if err != nil {
 		slog.Error("error creating mock auth provider", "err", err)
 		os.Exit(1)
@@ -43,8 +49,8 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) { return })
-	mux.HandleFunc(fmt.Sprintf("POST /%s", *rootURL), srv.handleAuth)
-	mux.HandleFunc(fmt.Sprintf("GET /%s/%s/%s", *rootURL, *JWKSURL, *JWKSName), srv.handleWellKnown)
+	mux.HandleFunc(fmt.Sprintf("POST /%s", *rootURLFlag), srv.handleAuth)
+	mux.HandleFunc(fmt.Sprintf("GET /%s/%s/%s", *rootURLFlag, *JWKSURLFlag, *JWKSNameFlag), srv.handleWellKnown)
 
 	httpServer := http.Server{
 		Addr:    fmt.Sprintf("%s:%d", *ipFlag, *portFlag),
@@ -117,4 +123,16 @@ func (s *server) handleWellKnown(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	return
+}
+
+func parseKeyOps(input string) []string {
+	splitList := strings.Split(input, ",")
+	var output = make([]string, 0)
+	for _, item := range splitList {
+		trimmed := strings.TrimSpace(item)
+		if len(trimmed) > 0 {
+			output = append(output, trimmed)
+		}
+	}
+	return output
 }
