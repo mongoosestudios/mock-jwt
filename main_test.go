@@ -314,6 +314,37 @@ func TestHandleAuthWithCustomClaimsOverridden(t *testing.T) {
 	}
 }
 
+func TestHandleWellKnown(t *testing.T) {
+	testProvider, err := provider.NewMockAuth("es256", "sig", []string{"verify"})
+	if err != nil {
+		t.Fatalf("error creating mock auth provider: %s\n", err)
+	}
+
+	testServer := server{
+		auth: testProvider,
+	}
+
+	testRequest := httptest.NewRequest(http.MethodPost, "/auth/.well-known/jwks.json", nil)
+	testRecorder := httptest.NewRecorder()
+
+	testServer.handleWellKnown(testRecorder, testRequest)
+	if testRecorder.Code != http.StatusOK {
+		t.Errorf("error handling get well-known\nresponse code: %d\nbody: %s", testRecorder.Code, testRecorder.Body)
+	}
+
+	var result provider.KeysetResponse
+	decoder := json.NewDecoder(testRecorder.Body)
+	err = decoder.Decode(&result)
+	if err != nil {
+		t.Fatalf("error unmarshalling response: %s\n", err)
+	}
+
+	expected := testProvider.GetKeyResponse()
+	if diff := cmp.Diff(expected, result); diff != "" {
+		t.Errorf("bad return from handle func\n%s\n", diff)
+	}
+}
+
 func TestParseKeyOps(t *testing.T) {
 	testOps := " foo,  bar, baz "
 	expectedOps := []string{"foo", "bar", "baz"}
