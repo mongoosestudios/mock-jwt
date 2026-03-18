@@ -5,7 +5,6 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"strings"
 
@@ -40,7 +39,7 @@ type KeysetResponse struct {
 }
 
 func NewMockAuth(signMethod string, keyUse string, keyOps []string) (*MockAuth, error) {
-	privateKey, webKey, err := generateNewPrivateKey(signMethod)
+	thisMethod, privateKey, webKey, err := generateNewPrivateKey(signMethod)
 	if err != nil {
 		return nil, fmt.Errorf("error generating new private key: %s", err)
 	}
@@ -53,7 +52,7 @@ func NewMockAuth(signMethod string, keyUse string, keyOps []string) (*MockAuth, 
 	}}
 
 	return &MockAuth{
-		SigningMethod: jwt.SigningMethodES256,
+		SigningMethod: thisMethod,
 		Key:           privateKey,
 		KeyResponse:   keySet,
 	}, nil
@@ -72,39 +71,43 @@ func (ma *MockAuth) GetKey() KeysetResponse {
 	return ma.KeyResponse
 }
 
-func generateNewPrivateKey(signingMethod string) (interface{}, JSONWebKey, error) {
+func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, interface{}, JSONWebKey, error) {
 	var privateKey interface{}
 	newJWK := JSONWebKey{
 		KeyID: uuid.New(),
 	}
+	var thisMethod jwt.SigningMethod
+
 	switch strings.ToLower(signingMethod) {
 	case "es256":
 		k, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 		if err != nil {
-			return nil, newJWK, fmt.Errorf("error generating private key: %s", err)
+			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
 		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
 		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
 
 		privateKey = k
 
+		thisMethod = jwt.SigningMethodES256
 		newJWK.Algorithm = "ES256"
-		newJWK.Curve = "P-256"
+		newJWK.Curve = k.Params().Name
 		newJWK.X = keyX
 		newJWK.Y = keyY
 
 	case "es384":
 		k, err := ecdsa.GenerateKey(elliptic.P384(), rand.Reader)
 		if err != nil {
-			return nil, newJWK, fmt.Errorf("error generating private key: %s", err)
+			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
 		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
 		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
 
 		privateKey = k
 
+		thisMethod = jwt.SigningMethodES384
 		newJWK.Algorithm = "ES384"
-		newJWK.Curve = "P-384"
+		newJWK.Curve = k.Params().Name
 		newJWK.X = keyX
 		newJWK.Y = keyY
 	case "es512":
@@ -112,20 +115,21 @@ func generateNewPrivateKey(signingMethod string) (interface{}, JSONWebKey, error
 		// https://datatracker.ietf.org/doc/html/rfc7518#section-3.1
 		k, err := ecdsa.GenerateKey(elliptic.P521(), rand.Reader)
 		if err != nil {
-			return nil, newJWK, fmt.Errorf("error generating private key: %s", err)
+			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
 		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
 		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
 
 		privateKey = k
 
+		thisMethod = jwt.SigningMethodES512
 		newJWK.Algorithm = "ES512"
-		newJWK.Curve = "P-521"
+		newJWK.Curve = k.Params().Name
 		newJWK.X = keyX
 		newJWK.Y = keyY
 	default:
-		return nil, newJWK, fmt.Errorf("unsupported signing method: %s", signingMethod)
+		return nil, nil, newJWK, fmt.Errorf("unsupported signing method: %s", signingMethod)
 	}
 
-	return privateKey, newJWK, errors.New("not implemented")
+	return thisMethod, privateKey, newJWK, nil
 }
