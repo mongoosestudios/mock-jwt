@@ -96,6 +96,7 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		privateKey = k
 
 		thisMethod = jwt.SigningMethodES256
+		newJWK.KeyType = "EC"
 		newJWK.Algorithm = "ES256"
 		newJWK.Curve = k.Params().Name
 		newJWK.X = keyX
@@ -111,6 +112,7 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		privateKey = k
 
 		thisMethod = jwt.SigningMethodES384
+		newJWK.KeyType = "EC"
 		newJWK.Algorithm = "ES384"
 		newJWK.Curve = k.Params().Name
 		newJWK.X = keyX
