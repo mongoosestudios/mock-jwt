@@ -16,7 +16,6 @@ import (
 	"time"
 
 	"github.com/MongooseStudios/mock-jwt/internal/provider"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type server struct {
@@ -55,6 +54,7 @@ func main() {
 	// in case you need to wait in a pipeline, poll the ready endpoint for a 200 response
 	mux.HandleFunc("/ready", func(w http.ResponseWriter, _ *http.Request) {})
 	mux.HandleFunc(fmt.Sprintf("POST /%s", *rootURLFlag), srv.handleAuth)
+	mux.HandleFunc("POST /setclaims", srv.handleAddCustomClaims)
 	mux.HandleFunc(fmt.Sprintf("GET /%s/%s/%s", *rootURLFlag, *JWKSURLFlag, *JWKSNameFlag), srv.handleWellKnown)
 
 	httpServer := http.Server{
@@ -88,7 +88,7 @@ func main() {
 }
 
 func (s *server) handleAuth(w http.ResponseWriter, r *http.Request) {
-	claims := make(jwt.MapClaims)
+	claims := make(map[string]any)
 
 	// unmarshall the body into a map that will echo the claims provided (if there are any) back through the token claims
 	if r.ContentLength > 0 {
@@ -117,6 +117,21 @@ func (s *server) handleAuth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		slog.Error("error writing response", "err", err)
 	}
+}
+
+func (s *server) handleAddCustomClaims(w http.ResponseWriter, r *http.Request) {
+	claims := make(map[string]any)
+
+	// unmarshall the body into a map that will echo the claims provided (if there are any) back through the token claims
+	if r.ContentLength > 0 {
+		decoder := json.NewDecoder(r.Body)
+		err := decoder.Decode(&claims)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("error unmarshalling request body to claims: %s\n", err), http.StatusBadRequest)
+			return
+		}
+	}
+	s.auth.SetCustomClaims(claims)
 }
 
 func (s *server) handleWellKnown(w http.ResponseWriter, _ *http.Request) {
