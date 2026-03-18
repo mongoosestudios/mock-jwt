@@ -23,6 +23,10 @@ type server struct {
 	auth *provider.MockAuth
 }
 
+type response struct {
+	Token string `json:"token"`
+}
+
 func main() {
 	ipFlag := flag.String("ip", "", "the IP interfaces to bind to, default is all interfaces on the port specified (IE: \":8080\")")
 	portFlag := flag.Int("port", 8080, "the port to listen on")
@@ -102,14 +106,21 @@ func (s *server) handleAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err = w.Write([]byte(newToken))
+	responseData := response{Token: newToken}
+	byteData, err := json.Marshal(responseData)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("error marshalling response data: %s\n", err), http.StatusInternalServerError)
+		return
+	}
+
+	_, err = w.Write(byteData)
 	if err != nil {
 		slog.Error("error writing response", "err", err)
 	}
 }
 
 func (s *server) handleWellKnown(w http.ResponseWriter, _ *http.Request) {
-	marshalled, err := json.Marshal(s.auth.GetKey())
+	marshalled, err := json.Marshal(s.auth.GetKeyResponse())
 	if err != nil {
 		http.Error(w, fmt.Sprintf("error marshalling key response: %s", err), http.StatusInternalServerError)
 		return
