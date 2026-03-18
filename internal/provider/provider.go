@@ -34,6 +34,8 @@ type JSONWebKey struct {
 	Y                    string    `json:"y,omitempty"`        // N.B. B64 URL encoded y coordinate of ECC, not directly specified in the RFC, but present in examples
 }
 
+// KeysetResponse mocks a keyset response with a single populated JSONWebKey inside of it
+// the information in the key is based on the parameters passed to the MockAuth on creation
 type KeysetResponse struct {
 	Keys []JSONWebKey `json:"keys"`
 }
@@ -58,6 +60,7 @@ func NewMockAuth(signMethod string, keyUse string, keyOps []string) (*MockAuth, 
 	}, nil
 }
 
+// MakeSignedToken will take the provided claims and return a signed JWT with those claims
 func (ma *MockAuth) MakeSignedToken(claims jwt.MapClaims) (string, error) {
 	token := jwt.NewWithClaims(ma.SigningMethod, claims)
 	signedString, err := token.SignedString(ma.Key)
@@ -67,6 +70,7 @@ func (ma *MockAuth) MakeSignedToken(claims jwt.MapClaims) (string, error) {
 	return signedString, nil
 }
 
+// GetKey returns a KeysetResponse that may be marshaled and returned to the user
 func (ma *MockAuth) GetKey() KeysetResponse {
 	return ma.KeyResponse
 }
