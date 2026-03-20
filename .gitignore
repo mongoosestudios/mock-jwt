@@ -28,3 +28,5 @@ go.work.sum
 # intellij folder
 .idea/
 
+# ignore the built binary, just in case
+mock-jwt
