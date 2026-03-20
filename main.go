@@ -28,7 +28,7 @@ type response struct {
 
 func main() {
 	ipFlag := flag.String("ip", "", "the IP interfaces to bind to, default is all interfaces on the port specified (IE: \":8080\")")
-	portFlag := flag.Int("port", 8080, "the port to listen on")
+	portFlag := flag.Int("port", 8888, "the port to listen on")
 	rootURLFlag := flag.String("root", "auth", "the root URL to serve tokens on")
 	JWKSURLFlag := flag.String("jwks-url", ".well-known", "the URL that the JWKS data will be served at")
 	JWKSNameFlag := flag.String("jwks-name", "jwks.json", "name and extension that the JWKS data will be served at")
@@ -63,7 +63,7 @@ func main() {
 	}
 
 	go func() {
-		slog.Info("Server starting, listening on", "ip", "all", "port", "8888")
+		slog.Info("Server starting, listening on", "ip", *ipFlag, "port", *portFlag)
 		if err := httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			slog.Error("Server error", "err", err)
 		}
