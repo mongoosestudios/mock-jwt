@@ -1,11 +1,14 @@
-# README
-
-mock-jwt is a small mock JWT server for testing authenticated endpoints in CI/CD Pipelines, or for local development.  It was written exclusively by a human, using no AI.  
+# Readme
+mock-jwt is a small mock JWT server for testing authenticated endpoints in CI/CD Pipelines, or for local development.  It was written exclusively by a human, using no AI.
 
 mock-jwt should be considered to be in beta and UNDER NO CIRCUMSTANCES SHOULD IT BE USED FOR AUTHENTICATION IN PRODUCTION.
 
 Currently only tokens signed with Elliptic Curve algorithms are supported.  This is because implementing RSA signed tokens adds a great deal of complexity, and I don't need them for my use-case.  If you want RSA tokens please create an issue requesting them.  If there is sufficient interest I'll take a look at adding them.
 
+## Installation
+// TODO: write installation guide
+
+## How to Use mock-jwt
 Multiple command flags are provided to try and ensure it will work in your environment.  You may view them by running ```mock-jwt -h```  The following examples will assume default configuration.
 
 Note: a new signing key is generated each time you start the server.  Settings such as custom claims also do not persist between server restarts.
