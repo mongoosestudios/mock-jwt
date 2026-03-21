@@ -3,11 +3,9 @@ enable-email-notifications: true
 
 on:
   push:
-    tags-ignore:
-      - '*'
 jobs:
   test:
-    runs-on: docker
+    runs-on: default
     steps:
       - name: checkout
         uses: https://data.forgejo.org/actions/checkout@v6
