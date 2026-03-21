@@ -20,7 +20,7 @@ jobs:
       - name: build
         run: CGO_ENABLED=0 go build
       - name: docker build
-        run: docker build .
+        run: docker build
       - name: get-version
         uses: https://github.com/jannemattila/get-version-from-tag@v4
       - name: docker tag version
