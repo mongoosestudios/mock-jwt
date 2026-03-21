@@ -1,7 +1,10 @@
 name: Testing
 enable-email-notifications: true
 
-on: [push]
+on:
+  push:
+    tags-ignore:
+      - '*'
 jobs:
   test:
     runs-on: docker
