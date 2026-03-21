@@ -1,0 +1,29 @@
+name: Build and Deploy
+enable-email-notifications: true
+
+on:
+  push:
+    tags:
+      - '*'
+jobs:
+  build:
+    runs-on: docker
+    steps:
+      - name: checkout
+        uses: https://data.forgejo.org/actions/checkout@v6
+      - name: install Go
+        uses: https://data.forgejo.org/actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+          cache-dependency-path: 'go.sum'
+      - name: build
+        run: CGO_ENABLED=0 go build
+      - name: docker build
+        run: docker build .
+      - name: get-version
+        uses: https://github.com/jannemattila/get-version-from-tag@v4
+      - name: docker tag version
+        run: docker docker.io/mongoosestudios/mock-jwt:${{ steps.get-version.outputs.version }}
+      - name: docker tag latest
+        run: docker docker.io/mongoosestudios/mock-jwt:latest
