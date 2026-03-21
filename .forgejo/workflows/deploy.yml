@@ -2,10 +2,7 @@ name: Build and Deploy
 enable-email-notifications: true
 
 on:
-  workflow_run:
-    workflows: ["Testing"]
-    types:
-      - completed
+  push:
 #    tags:
 #      - '*'
 jobs:
