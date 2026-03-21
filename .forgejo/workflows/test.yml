@@ -1,0 +1,17 @@
+name: Testing
+enable-email-notifications: true
+
+on: [push]
+jobs:
+  test:
+    runs-on: docker
+    steps:
+      - name: checkout
+        uses: https://data.forgejo.org/actions/checkout@v6
+      - name: install Go
+        uses: https://data.forgejo.org/actions/setup-go@v6
+        with:
+          go-version-file: 'go.mod'
+          cache-dependency-path: server/go.mod
+      - name: run go tests
+        run: go test ./...
