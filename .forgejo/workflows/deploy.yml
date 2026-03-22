@@ -7,7 +7,7 @@ on:
 #      - '*'
 jobs:
   build:
-    runs-on: mongoosestudios/build-container:latest
+    container: mongoosestudios/build-container:latest
     steps:
       - name: Login to Docker Hub
         uses: https://github.com/docker/login-action@v4
