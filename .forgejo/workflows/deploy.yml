@@ -21,6 +21,8 @@ jobs:
 #        uses: https://github.com/docker/setup-buildx-action@v4
 #      - name: checkout
 #        uses: https://data.forgejo.org/actions/checkout@v6
+      - name: check node
+        run: node -v
       - name: install Go
         uses: https://data.forgejo.org/actions/setup-go@v6
         with:
