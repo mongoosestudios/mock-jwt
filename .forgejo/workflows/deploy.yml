@@ -10,19 +10,17 @@ jobs:
     runs-on: default
     container: mongoosestudios/build-container:24.14.0
     steps:
-#      - name: Login to Docker Hub
-#        uses: https://github.com/docker/login-action@v4
-#        with:
-#          username: ${{ vars.DOCKER_HUB_USER }}
-#          password: ${{ secrets.DOCKER_HUB_TOKEN }}
+      - name: Login to Docker Hub
+        uses: https://github.com/docker/login-action@v4
+        with:
+          username: ${{ vars.DOCKER_HUB_USER }}
+          password: ${{ secrets.DOCKER_HUB_TOKEN }}
 #      - name: Set up QEMU
 #        uses: https://github.com/docker/setup-qemu-action@v4
 #      - name: Set up Docker Buildx
 #        uses: https://github.com/docker/setup-buildx-action@v4
 #      - name: checkout
 #        uses: https://data.forgejo.org/actions/checkout@v6
-      - name: check node
-        run: echo $NVM_DIR
       - name: install Go
         uses: https://data.forgejo.org/actions/setup-go@v6
         with:
