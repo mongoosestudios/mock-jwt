@@ -22,7 +22,7 @@ jobs:
 #      - name: checkout
 #        uses: https://data.forgejo.org/actions/checkout@v6
       - name: check node
-        run: node -v
+        run: echo $PATH
       - name: install Go
         uses: https://data.forgejo.org/actions/setup-go@v6
         with:
