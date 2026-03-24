@@ -37,5 +37,5 @@ jobs:
         uses: https://github.com/docker/build-push-action@v7
         with:
           push: true
-          tags: mongoosestudios/mock-jwt:${{ steps.get-version.outputs.MAJOR }}.${{ steps.get-version.outputs.MINOR }}.${{ steps.get-version.outputs.PATCH }}
+          tags: mongoosestudios/mock-jwt:${{ steps.get-version.outputs.$MAJOR }}.${{ steps.get-version.outputs.$MINOR }}.${{ steps.get-version.outputs.$PATCH }}
 
