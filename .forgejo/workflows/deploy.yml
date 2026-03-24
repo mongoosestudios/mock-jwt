@@ -31,13 +31,11 @@ jobs:
           cache-dependency-path: 'go.sum'
       - name: build
         run: CGO_ENABLED=0 go build
-      - name: get-version
-        uses: https://github.com/damienaicheh/extract-version-from-tag-action@v1.3.0
-      - name: set-tag
-        run: echo "tag=${{ steps.get-version.outputs.MAJOR }}.${{ steps.get-version.outputs.MINOR }}.${{ steps.get-version.outputs.PATCH }}" && echo "tag=${{ steps.get-version.outputs.MAJOR }}.${{ steps.get-version.outputs.MINOR }}.${{ steps.get-version.outputs.PATCH }}" >> $FORGEJO_OUTPUT
+      - name: ref test
+        echo: "${{ env.FORGEJO_REF_NAME }}"
       - name: docker build and push
         uses: https://github.com/docker/build-push-action@v7
         with:
           push: true
-          tags: "mongoosestudios/mock-jwt:${{ steps.set-tag.outputs.tag }}"
+          tags: "mongoosestudios/mock-jwt:${{ env.FORGEJO_REF_NAME }}"
 
