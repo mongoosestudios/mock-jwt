@@ -1,4 +1,4 @@
-module github.com/mongoosestudios/mock-jwt
+module github.com/MongooseStudios/mock-jwt
 
 go 1.26.1
 
