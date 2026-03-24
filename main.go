@@ -15,7 +15,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/MongooseStudios/mock-jwt/internal/provider"
+	"github.com/mongoosestudios/mock-jwt/internal/provider"
 )
 
 type server struct {
