@@ -28,7 +28,9 @@ jobs:
           cache: true
           cache-dependency-path: 'go.sum'
       - name: build
-        run: CGO_ENABLED=0 go build && ls
+        run: CGO_ENABLED=0 go build && ls && pwd
+      - name: file-check
+        run: pwd && ls
 #      - name: docker build and push
 #        uses: https://github.com/docker/build-push-action@v7
 #        with:
