@@ -8,9 +8,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/MongooseStudios/mock-jwt/internal/provider"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/go-cmp/cmp"
+	"github.com/mongoosestudios/mock-jwt/internal/provider"
 )
 
 func TestHandleAuth(t *testing.T) {
