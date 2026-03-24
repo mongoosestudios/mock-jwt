@@ -36,7 +36,6 @@ and then run go-build from the root of the folder
 cd mock-jwt
 go build .
 ```
-D
 
 ## How to Use mock-jwt
 Multiple command flags are provided to try and ensure it will work in your environment.  You may view them by running ```mock-jwt -h```  The following examples will assume default configuration.
