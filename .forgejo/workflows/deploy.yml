@@ -32,6 +32,7 @@ jobs:
       - name: docker build and push
         uses: https://github.com/docker/build-push-action@v7
         with:
+          context: .
           push: true
           tags: "mongoosestudios/mock-jwt:${{ env.FORGEJO_REF_NAME }}"
 
