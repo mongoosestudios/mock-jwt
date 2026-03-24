@@ -6,7 +6,37 @@ mock-jwt should be considered to be in beta and UNDER NO CIRCUMSTANCES SHOULD IT
 Currently only tokens signed with Elliptic Curve algorithms are supported.  This is because implementing RSA signed tokens adds a great deal of complexity, and I don't need them for my use-case.  If you want RSA tokens please create an issue requesting them.  If there is sufficient interest I'll take a look at adding them.
 
 ## Installation
-// TODO: write installation guide
+
+### Go
+mock-jwt can be installed directly using go install
+```bash
+go install github.com/mongoosestudios/mock-jwt
+```
+
+Once installed you may simply run mock-jwt from the command line with 
+```bash
+mock-jwt
+```
+
+### Docker
+Docker builds are provided at https://hub.docker.com/r/mongoosestudios/mock-jwt
+
+and may be pulled directly via docker
+```bash
+docker pull docker.io/mongoosestudios/mock-jwt:latest
+```
+
+### Build from Source
+If you prefer to build directly then first clone the repository
+```bash
+git clone git@github.com:mongoosestudios/mock-jwt.git
+```
+and then run go-build from the root of the folder
+```bash
+cd mock-jwt
+go build .
+```
+D
 
 ## How to Use mock-jwt
 Multiple command flags are provided to try and ensure it will work in your environment.  You may view them by running ```mock-jwt -h```  The following examples will assume default configuration.
