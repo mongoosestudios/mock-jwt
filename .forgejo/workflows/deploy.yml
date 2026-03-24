@@ -33,9 +33,15 @@ jobs:
         run: CGO_ENABLED=0 go build
       - name: get-version
         uses: https://github.com/damienaicheh/extract-version-from-tag-action@v1.3.0
+        run: |
+          cat >> $FORGEJO_OUTPUT <<EOF
+          MAJOR=$MAJOR
+          MINOR=$MINOR
+          PATCH=$PATCH
+          EOF
       - name: docker build and push
         uses: https://github.com/docker/build-push-action@v7
         with:
           push: true
-          tags: mongoosestudios/mock-jwt:${{ steps.get-version.outputs.$MAJOR }}.${{ steps.get-version.outputs.$MINOR }}.${{ steps.get-version.outputs.$PATCH }}
+          tags: mongoosestudios/mock-jwt:${{ steps.get-version.outputs.MAJOR }}.${{ steps.get-version.outputs.MINOR }}.${{ steps.get-version.outputs.PATCH }}
 
