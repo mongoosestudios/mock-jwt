@@ -3,6 +3,10 @@ enable-email-notifications: true
 
 on:
   push:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
 jobs:
   test:
     runs-on: default
