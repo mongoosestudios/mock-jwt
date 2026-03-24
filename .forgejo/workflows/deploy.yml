@@ -32,7 +32,7 @@ jobs:
       - name: build
         run: CGO_ENABLED=0 go build
       - name: ref test
-        echo: "${{ env.FORGEJO_REF_NAME }}"
+        run: echo "${{ env.FORGEJO_REF_NAME }}"
       - name: docker build and push
         uses: https://github.com/docker/build-push-action@v7
         with:
