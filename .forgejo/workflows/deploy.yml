@@ -39,5 +39,5 @@ jobs:
         uses: https://github.com/docker/build-push-action@v7
         with:
           push: true
-          tags: mongoosestudios/mock-jwt:${{ steps.set-tag.outputs.tag }}
+          tags: "mongoosestudios/mock-jwt:${{ steps.set-tag.outputs.tag }}"
 
