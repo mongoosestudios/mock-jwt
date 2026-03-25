@@ -121,6 +121,8 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		if err != nil {
 			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
+		// N.B. X and Y are shown as deprecated but there seems to be no correct way to GET the X and Y at this time.
+		// Gx and Gy from the Parameters on the public key are NOT the same.
 		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.X.Bytes())
 		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Y.Bytes())
 
@@ -137,6 +139,8 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		if err != nil {
 			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
+		// N.B. X and Y are shown as deprecated but there seems to be no correct way to GET the X and Y at this time.
+		// Gx and Gy from the Parameters on the public key are NOT the same.
 		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.X.Bytes())
 		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Y.Bytes())
 
@@ -155,6 +159,9 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		if err != nil {
 			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
+		// N.B. X and Y are shown as deprecated but there seems to be no correct way to GET the X and Y at this time.
+		// Gx and Gy from the Parameters on the public key are NOT the same.
+		k.Public()
 		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.X.Bytes())
 		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Y.Bytes())
 
