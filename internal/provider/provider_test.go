@@ -1,9 +1,14 @@
 package provider
 
 import (
+	"context"
 	"crypto/ecdsa"
+	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
+	"github.com/MicahParks/keyfunc/v3"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/go-cmp/cmp"
 )
@@ -231,6 +236,81 @@ func TestTokenES256(t *testing.T) {
 	}
 }
 
+func TestTokenES256KeyResponse(t *testing.T) {
+	signingMethod := "ES256"
+	expectedUse := "sig"
+	expectedOps := []string{"verify"}
+
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
+	if err != nil {
+		t.Fatalf("error creating test mock auth provider: %s\n", err)
+	}
+
+	testClaims := jwt.MapClaims{
+		"claimA": "A",
+		"claimB": "B",
+	}
+
+	token, err := testAuth.MakeSignedToken(testClaims)
+	if err != nil {
+		t.Fatalf("error creating token: %s", err)
+	}
+
+	claimMap := map[string]any{
+		"claimA": "",
+		"claimB": "",
+	}
+	var claimTemplate jwt.MapClaims
+	claimTemplate = claimMap
+
+	testParser := createParser([]string{jwt.SigningMethodES256.Alg()})
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		marshalled, err := json.Marshal(testAuth.keyResponse)
+		if err != nil {
+			t.Fatalf("error marshalling test key response: %s", err)
+		}
+		_, err = w.Write(marshalled)
+		if err != nil {
+			t.Fatalf("error writing test key response: %s", err)
+		}
+		return
+	}))
+	defer testServer.Close()
+
+	testKeyfunc, err := keyfunc.NewDefaultCtx(context.Background(), []string{testServer.URL})
+	if err != nil {
+		t.Fatalf("error creating test key function: %s", err)
+	}
+
+	parsedToken, err := testParser.ParseWithClaims(token, claimTemplate, testKeyfunc.Keyfunc)
+	if err != nil {
+		t.Fatalf("error validating token: %s\n", err)
+	}
+
+	if !parsedToken.Valid {
+		t.Error("unable to validate parsed token using the public key")
+	}
+
+	tokenClaims := parsedToken.Claims.(jwt.MapClaims)
+	if claimA, ok := (tokenClaims)["claimA"]; ok {
+		if claimA != testClaims["claimA"] {
+			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimA"], claimA)
+		}
+	} else {
+		t.Errorf("test claim A not passed through signed token correctly, not present in map")
+	}
+	if claimB, ok := (tokenClaims)["claimB"]; ok {
+		if claimB != testClaims["claimB"] {
+			t.Errorf("test claim B not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimB"], claimB)
+		}
+	} else {
+		t.Errorf("test claim B not passed through signed token correctly, not present in map")
+	}
+}
+
 func TestTokenES384(t *testing.T) {
 	signingMethod := "ES384"
 	expectedUse := "testing"
@@ -289,6 +369,80 @@ func TestTokenES384(t *testing.T) {
 	}
 }
 
+func TestTokenES384KeyResponse(t *testing.T) {
+	signingMethod := "ES384"
+	expectedUse := "sig"
+	expectedOps := []string{"verify"}
+
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
+	if err != nil {
+		t.Fatalf("error creating test mock auth provider: %s\n", err)
+	}
+
+	testClaims := jwt.MapClaims{
+		"claimA": "A",
+		"claimB": "B",
+	}
+
+	token, err := testAuth.MakeSignedToken(testClaims)
+	if err != nil {
+		t.Fatalf("error creating token: %s", err)
+	}
+
+	claimMap := map[string]any{
+		"claimA": "",
+		"claimB": "",
+	}
+	var claimTemplate jwt.MapClaims
+	claimTemplate = claimMap
+
+	testParser := createParser([]string{jwt.SigningMethodES384.Alg()})
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		marshalled, err := json.Marshal(testAuth.keyResponse)
+		if err != nil {
+			t.Fatalf("error marshalling test key response: %s", err)
+		}
+		_, err = w.Write(marshalled)
+		if err != nil {
+			t.Fatalf("error writing test key response: %s", err)
+		}
+		return
+	}))
+	defer testServer.Close()
+
+	testKeyfunc, err := keyfunc.NewDefaultCtx(context.Background(), []string{testServer.URL})
+	if err != nil {
+		t.Fatalf("error creating test key function: %s", err)
+	}
+	parsedToken, err := testParser.ParseWithClaims(token, claimTemplate, testKeyfunc.Keyfunc)
+	if err != nil {
+		t.Fatalf("error validating token: %s\n", err)
+	}
+
+	if !parsedToken.Valid {
+		t.Error("unable to validate parsed token using the public key")
+	}
+
+	tokenClaims := parsedToken.Claims.(jwt.MapClaims)
+	if claimA, ok := (tokenClaims)["claimA"]; ok {
+		if claimA != testClaims["claimA"] {
+			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimA"], claimA)
+		}
+	} else {
+		t.Errorf("test claim A not passed through signed token correctly, not present in map")
+	}
+	if claimB, ok := (tokenClaims)["claimB"]; ok {
+		if claimB != testClaims["claimB"] {
+			t.Errorf("test claim B not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimB"], claimB)
+		}
+	} else {
+		t.Errorf("test claim B not passed through signed token correctly, not present in map")
+	}
+}
+
 func TestTokenES512(t *testing.T) {
 	signingMethod := "ES512"
 	expectedUse := "testing"
@@ -320,6 +474,80 @@ func TestTokenES512(t *testing.T) {
 	parsedToken, err := testParser.ParseWithClaims(token, claimTemplate, func(token *jwt.Token) (any, error) {
 		return &testAuth.key.(*ecdsa.PrivateKey).PublicKey, nil
 	})
+	if err != nil {
+		t.Fatalf("error validating token: %s\n", err)
+	}
+
+	if !parsedToken.Valid {
+		t.Error("unable to validate parsed token using the public key")
+	}
+
+	tokenClaims := parsedToken.Claims.(jwt.MapClaims)
+	if claimA, ok := (tokenClaims)["claimA"]; ok {
+		if claimA != testClaims["claimA"] {
+			t.Errorf("test claim A not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimA"], claimA)
+		}
+	} else {
+		t.Errorf("test claim A not passed through signed token correctly, not present in map")
+	}
+	if claimB, ok := (tokenClaims)["claimB"]; ok {
+		if claimB != testClaims["claimB"] {
+			t.Errorf("test claim B not passed through signed token correctly, wanted: %s, got: %s",
+				testClaims["claimB"], claimB)
+		}
+	} else {
+		t.Errorf("test claim B not passed through signed token correctly, not present in map")
+	}
+}
+
+func TestTokenES512KeyResponse(t *testing.T) {
+	signingMethod := "ES512"
+	expectedUse := "sig"
+	expectedOps := []string{"verify"}
+
+	testAuth, err := NewMockAuth(signingMethod, expectedUse, expectedOps)
+	if err != nil {
+		t.Fatalf("error creating test mock auth provider: %s\n", err)
+	}
+
+	testClaims := jwt.MapClaims{
+		"claimA": "A",
+		"claimB": "B",
+	}
+
+	token, err := testAuth.MakeSignedToken(testClaims)
+	if err != nil {
+		t.Fatalf("error creating token: %s", err)
+	}
+
+	claimMap := map[string]any{
+		"claimA": "",
+		"claimB": "",
+	}
+	var claimTemplate jwt.MapClaims
+	claimTemplate = claimMap
+
+	testParser := createParser([]string{jwt.SigningMethodES512.Alg()})
+
+	testServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		marshalled, err := json.Marshal(testAuth.keyResponse)
+		if err != nil {
+			t.Fatalf("error marshalling test key response: %s", err)
+		}
+		_, err = w.Write(marshalled)
+		if err != nil {
+			t.Fatalf("error writing test key response: %s", err)
+		}
+		return
+	}))
+	defer testServer.Close()
+
+	testKeyfunc, err := keyfunc.NewDefaultCtx(context.Background(), []string{testServer.URL})
+	if err != nil {
+		t.Fatalf("error creating test key function: %s", err)
+	}
+	parsedToken, err := testParser.ParseWithClaims(token, claimTemplate, testKeyfunc.Keyfunc)
 	if err != nil {
 		t.Fatalf("error validating token: %s\n", err)
 	}

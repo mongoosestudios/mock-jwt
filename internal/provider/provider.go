@@ -25,7 +25,7 @@ type MockAuth struct {
 type JSONWebKey struct {
 	KeyType              string    `json:"kty"`
 	Use                  string    `json:"use"`
-	KeyOps               []string  `json:"key_ops,omitempty"`
+	KeyOps               []string  `json:"key_ops"`
 	Algorithm            string    `json:"alg,omitempty"`
 	KeyID                uuid.UUID `json:"kid,omitempty"`
 	X509URL              string    `json:"x5u,omitempty"`
@@ -121,8 +121,8 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		if err != nil {
 			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
-		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
-		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
+		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.X.Bytes())
+		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Y.Bytes())
 
 		privateKey = k
 
@@ -137,8 +137,8 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		if err != nil {
 			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
-		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
-		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
+		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.X.Bytes())
+		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Y.Bytes())
 
 		privateKey = k
 
@@ -155,8 +155,8 @@ func generateNewPrivateKey(signingMethod string) (jwt.SigningMethod, any, JSONWe
 		if err != nil {
 			return nil, nil, newJWK, fmt.Errorf("error generating private key: %s", err)
 		}
-		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gx.Bytes())
-		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Params().Gy.Bytes())
+		keyX := base64.URLEncoding.EncodeToString(k.PublicKey.X.Bytes())
+		keyY := base64.URLEncoding.EncodeToString(k.PublicKey.Y.Bytes())
 
 		privateKey = k
 
