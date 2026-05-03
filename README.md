@@ -10,7 +10,7 @@ Currently only tokens signed with Elliptic Curve algorithms are supported.  This
 ### Go
 mock-jwt can be installed directly using go install
 ```bash
-go install github.com/mongoosestudios/mock-jwt
+go install github.com/mongoosestudios/mock-jwt@latest
 ```
 
 Once installed you may simply run mock-jwt from the command line with 
